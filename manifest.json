@@ -13,6 +13,12 @@
     "https://tromis.northparkcleaners.com/*",
     "https://YOUR-WORDPRESS-DOMAIN.com/*"
   ],
+  "content_scripts": [
+    {
+      "matches": ["https://tromis.northparkcleaners.com/*"],
+      "js": ["content.js"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
