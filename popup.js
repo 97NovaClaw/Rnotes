@@ -323,4 +323,215 @@ document.addEventListener('DOMContentLoaded', () => {
             claimNumber: claimNum
         };
     }
+
+    // ==========================================
+    // VCARD GENERATION LOGIC
+    // ==========================================
+
+    /**
+     * Parses messy phone input like:
+     * "Daughter Diane (905) 869-5712"
+     * "Mother (primary) 905-336-2311 - Deceased"
+     * 
+     * Returns: { 
+     *   cleanNumber: "9058695712", 
+     *   textBefore: "Daughter Diane",
+     *   textAfter: "Deceased",
+     *   allText: "Daughter Diane Deceased"
+     * }
+     */
+    function parsePhoneField(rawPhone) {
+        if (!rawPhone || !rawPhone.trim()) {
+            return null;
+        }
+
+        // Remove +1, +01, etc. at the start
+        let cleaned = rawPhone.replace(/^\+0?1\s*/gi, '');
+
+        // Extract the phone number (digits, parentheses, hyphens, spaces)
+        // Match patterns like: (905) 869-5712, 905-336-2311, 9058695712
+        const phonePattern = /[\(\s]*(\d{3})[\)\s\-\.]*(\d{3})[\s\-\.]*(\d{4})/;
+        const match = cleaned.match(phonePattern);
+
+        if (!match) {
+            return null; // No valid phone number found
+        }
+
+        const cleanNumber = match[1] + match[2] + match[3]; // e.g., "9058695712"
+        const fullMatch = match[0]; // The matched phone portion
+        const matchIndex = cleaned.indexOf(fullMatch);
+
+        // Text before the phone number
+        const textBefore = cleaned.substring(0, matchIndex).trim();
+
+        // Text after the phone number
+        const textAfter = cleaned.substring(matchIndex + fullMatch.length).trim();
+
+        // Clean up text (remove common separators and parentheses)
+        const cleanText = (text) => {
+            return text
+                .replace(/[\(\)]/g, '') // Remove parentheses
+                .replace(/^[\-\–\—\:]+/, '') // Remove leading dashes/colons
+                .replace(/[\-\–\—\:]+$/, '') // Remove trailing dashes/colons
+                .replace(/\s+/g, ' ') // Normalize spaces
+                .trim();
+        };
+
+        const cleanedBefore = cleanText(textBefore);
+        const cleanedAfter = cleanText(textAfter);
+
+        // Combine all text
+        const allText = [cleanedBefore, cleanedAfter]
+            .filter(t => t.length > 0)
+            .join(' ');
+
+        return {
+            cleanNumber: cleanNumber,
+            textBefore: cleanedBefore,
+            textAfter: cleanedAfter,
+            allText: allText
+        };
+    }
+
+    /**
+     * Generates a vCard 3.0 string
+     */
+    function generateVCard(contactData) {
+        const {
+            fullName,
+            lastName,
+            firstName,
+            organization,
+            phone,
+            email,
+            address,
+            city,
+            state,
+            zip
+        } = contactData;
+
+        let vcard = "BEGIN:VCARD\n";
+        vcard += "VERSION:3.0\n";
+        vcard += "PRODID:-//Sabre//Sabre VObject 4.3.3//EN\n";
+        vcard += `UID:sabre-vobject-${Date.now()}-${Math.random().toString(36).substr(2, 9)}\n`;
+
+        // Name
+        vcard += `FN;CHARSET=utf-8:${fullName}\n`;
+        vcard += `N;CHARSET=utf-8:${lastName};${firstName};;;\n`;
+
+        // Organization
+        if (organization) {
+            vcard += `ORG;CHARSET=utf-8:${organization}\n`;
+        }
+
+        // Phone (cleaned, no +1)
+        if (phone) {
+            vcard += `TEL;TYPE=cell:${phone}\n`;
+        }
+
+        // Email
+        if (email) {
+            vcard += `EMAIL:${email}\n`;
+        }
+
+        // Address
+        if (address || city || state || zip) {
+            const addr = address || '';
+            const cty = city || '';
+            const st = state || '';
+            const zp = zip || '';
+            vcard += `ADR;TYPE=work;CHARSET=utf-8:;;${addr};${cty};${st};${zp};USA\n`;
+        }
+
+        vcard += "END:VCARD";
+        return vcard;
+    }
+
+    /**
+     * Downloads a vCard file
+     */
+    function downloadVCard(vcardString, filename) {
+        const blob = new Blob([vcardString], { type: 'text/vcard;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Creates and downloads a vCard for a phone field
+     */
+    function createVCardForPhone(phoneFieldValue, phoneNumber) {
+        const jobNum = d_jobNumber.value.trim();
+        const clientName = d_clientName.value.trim();
+        const claimNum = d_claimNumber.value.trim();
+        const addr = d_address.value.trim();
+        const city = d_city.value.trim();
+        const state = d_state.value.trim();
+        const zip = d_zip.value.trim();
+        const email = d_email.value.trim();
+
+        if (!jobNum || !clientName) {
+            showStatus('Job Number and Client Name required.', driveStatusEl, true);
+            return;
+        }
+
+        const parsed = parsePhoneField(phoneFieldValue);
+        if (!parsed) {
+            showStatus(`No valid phone number found in Phone ${phoneNumber}.`, driveStatusEl, true);
+            return;
+        }
+
+        // Build contact name: [Job#] - [Client Name] - [Extra Text]
+        // This will be the display name on all devices
+        let fullName = `${jobNum} - ${clientName}`;
+        if (parsed.allText) {
+            fullName += ` - ${parsed.allText}`;
+        }
+
+        // For the N field (Last;First;;;), we need to ensure iPhone/Windows show it correctly
+        // Put the entire formatted name as the "Last Name" and leave First Name empty
+        // This ensures iPhone/Windows displays exactly what we want
+        const contactData = {
+            fullName: fullName,  // Used for FN field
+            lastName: fullName,   // Put full formatted name here for iPhone/Windows
+            firstName: '',        // Leave empty so it doesn't rearrange
+            organization: claimNum ? `Claim: ${claimNum}` : 'North Park Cleaners',
+            phone: parsed.cleanNumber,
+            email: email,
+            address: addr,
+            city: city,
+            state: state,
+            zip: zip
+        };
+
+        const vcardString = generateVCard(contactData);
+        
+        // Filename: sanitize for filesystem
+        const safeName = fullName.replace(/[^a-z0-9\-\_\s]/gi, '').replace(/\s+/g, '_');
+        const filename = `${safeName}.vcf`;
+
+        downloadVCard(vcardString, filename);
+        showStatus(`Contact downloaded: ${fullName}`, driveStatusEl, false);
+    }
+
+    // Event Listeners for vCard Download Buttons
+    const downloadVCard1Btn = document.getElementById('downloadVCard1');
+    const downloadVCard2Btn = document.getElementById('downloadVCard2');
+
+    if (downloadVCard1Btn) {
+        downloadVCard1Btn.addEventListener('click', () => {
+            createVCardForPhone(d_phone.value, 1);
+        });
+    }
+
+    if (downloadVCard2Btn) {
+        downloadVCard2Btn.addEventListener('click', () => {
+            createVCardForPhone(d_phone2.value, 2);
+        });
+    }
 });
