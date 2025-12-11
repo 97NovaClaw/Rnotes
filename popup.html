@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Productivity Suite</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+<body>
+    <div class="dropdown">
+        <button id="toggleButton" class="dropdown-toggle-btn">Tromis Turbo ▼</button>
+        <div id="dropdownContent" class="dropdown-content">
+            <div class="field">
+                <label for="jobNumber">Job Number:</label>
+                <input type="text" id="jobNumber" placeholder="Enter job number here"/>
+                <button id="jobLinkBtn" class="action-button">Open in Tromis</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-button active" data-tab="restornetTab">Restornet Notes</button>
+        <button class="tab-button" data-tab="tromisLogTab">Tromis Log</button>
+        <button class="tab-button" data-tab="driveTab">Drive Workspace</button>
+    </div>
+
+    <div id="restornetTab" class="tab-content active">
+        <h1>Restornet Notes</h1>
+        <div class="field">
+            <label for="typeSelect">Type:</label>
+            <select id="typeSelect">
+                <option value="Correspondence">Correspondence</option>
+                <option value="Special Direction">Special Direction</option>
+                <option value="Billing">Billing</option>
+                <option value="Collections">Collections</option>
+                <option value="Report">Report</option>
+                <option value="Status Update">Status Update</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="streamSelect">Stream:</label>
+            <select id="streamSelect">
+                <option value="General">General</option>
+                <option value="Content">Content</option>
+                <option value="Soft Content">Soft Content</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Art">Art</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="noteText">Paste Your Note Here:</label>
+            <textarea id="noteText" placeholder="Paste your note here..."></textarea>
+        </div>
+        <div class="field">
+            <button id="copyBtn" class="action-button">Copy Formatted Note</button>
+        </div>
+        <p id="restornetStatus" class="status-message"></p>
+    </div>
+
+    <div id="tromisLogTab" class="tab-content">
+        <h1>Tromis Cleaning Log</h1>
+        <div class="field">
+            <table id="tromisTable">
+                <thead>
+                    <tr>
+                        <th>Stream</th>
+                        <th>Date Cleaned</th>
+                        <th>Set Today</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+        <div class="field">
+            <button id="copyTromisLogBtn" class="action-button">Copy Tromis Log</button>
+        </div>
+        <div class="field">
+            <button id="generateFromPageBtn" class="action-button">Refresh Log from Page</button>
+        </div>
+        <p id="tromisLogStatus" class="status-message"></p>
+    </div>
+
+    <div id="driveTab" class="tab-content">
+        <h1>Google Drive Automation</h1>
+        <div class="field">
+            <button id="scrapeJobDataBtn" class="action-button" style="background-color: #28a745;">1. Scrape Job Data</button>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="field" style="flex: 1;">
+                <label>Job Number:</label>
+                <input type="text" id="d_jobNumber" readonly style="background-color:#e9ecef;">
+            </div>
+            <div class="field" style="flex: 1;">
+                <label>Claim Number:</label>
+                <input type="text" id="d_claimNumber">
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Client Name (Cleaned):</label>
+            <input type="text" id="d_clientName">
+        </div>
+
+        <div class="field">
+            <label>Address:</label>
+            <input type="text" id="d_address">
+        </div>
+
+        <div style="display: flex; gap: 5px;">
+            <div class="field" style="flex: 2;">
+                <label>City:</label>
+                <input type="text" id="d_city">
+            </div>
+            <div class="field" style="flex: 1;">
+                <label>State:</label>
+                <input type="text" id="d_state">
+            </div>
+            <div class="field" style="flex: 1;">
+                <label>Zip:</label>
+                <input type="text" id="d_zip">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="field" style="flex: 1;">
+                <label>Phone 1:</label>
+                <input type="text" id="d_phone">
+            </div>
+            <div class="field" style="flex: 1;">
+                <label>Phone 2:</label>
+                <input type="text" id="d_phone2">
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Email:</label>
+            <input type="text" id="d_email">
+        </div>
+
+        <div class="field" style="margin-top:20px;">
+            <button id="createDriveFolderBtn" class="action-button" disabled>2. Create Workspace</button>
+        </div>
+        
+        <p id="driveStatus" class="status-message"></p>
+        
+        <div id="driveLinkContainer" style="margin-top:15px; text-align:center; display:none; padding: 10px; background: #e6f7ff; border-radius: 6px; border: 1px solid #1890ff;">
+            <a href="#" id="driveLink" target="_blank" style="color:#007bff; font-weight:bold; text-decoration:none;">📂 Open New Google Drive Folder</a>
+        </div>
+    </div>
+
+    <script src="popup.js" defer></script>
+</body>
+</html>
