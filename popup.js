@@ -410,28 +410,28 @@ document.addEventListener('DOMContentLoaded', () => {
             zip
         } = contactData;
 
-        let vcard = "BEGIN:VCARD\n";
-        vcard += "VERSION:3.0\n";
-        vcard += "PRODID:-//LEGWORKmedia//Rnotes & Workspace 1.5//EN\n";
-        vcard += `UID:rnotes-${Date.now()}-${Math.random().toString(36).substr(2, 9)}\n`;
+        let vcard = "BEGIN:VCARD\r\n";
+        vcard += "VERSION:3.0\r\n";
+        vcard += "PRODID:-//LEGWORKmedia//Rnotes & Workspace 1.6//EN\r\n";
+        vcard += `UID:rnotes-${Date.now()}-${Math.random().toString(36).substr(2, 9)}\r\n`;
 
-        // Name
-        vcard += `FN;CHARSET=utf-8:${fullName}\n`;
-        vcard += `N;CHARSET=utf-8:${lastName};${firstName};;;\n`;
+        // Name - FN is the formatted display name
+        vcard += `FN:${fullName}\r\n`;
+        vcard += `N:${lastName};${firstName};;;\r\n`;
 
         // Organization
         if (organization) {
-            vcard += `ORG;CHARSET=utf-8:${organization}\n`;
+            vcard += `ORG:${organization}\r\n`;
         }
 
         // Phone (cleaned, no +1)
         if (phone) {
-            vcard += `TEL;TYPE=cell:${phone}\n`;
+            vcard += `TEL;TYPE=CELL:${phone}\r\n`;
         }
 
         // Email
         if (email) {
-            vcard += `EMAIL:${email}\n`;
+            vcard += `EMAIL:${email}\r\n`;
         }
 
         // Address
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cty = city || '';
             const st = state || '';
             const zp = zip || '';
-            vcard += `ADR;TYPE=work;CHARSET=utf-8:;;${addr};${cty};${st};${zp};USA\n`;
+            vcard += `ADR;TYPE=WORK:;;${addr};${cty};${st};${zp};USA\r\n`;
         }
 
         vcard += "END:VCARD";
@@ -487,17 +487,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Build contact name: [Job#] - [Client Name] - [Extra Text]
+        // Use spaces for readability in the contact
         let fullName = `${jobNum} - ${clientName}`;
         if (parsed.allText) {
             fullName += ` - ${parsed.allText}`;
         }
 
         // For vCard N field, we need Last;First format
-        // We'll use the full name as firstName, leave lastName empty for simplicity
+        // Split client name properly (format: "LYDEN, Thomas" -> Last: LYDEN, First: Thomas)
+        const nameParts = clientName.split(',').map(p => p.trim());
+        const lastName = nameParts[0] || clientName;
+        const firstName = nameParts[1] || '';
+        
+        // Build a descriptive first name for N field
+        let nFirstName = firstName;
+        if (parsed.allText) {
+            nFirstName = firstName ? `${firstName} (${parsed.allText})` : parsed.allText;
+        }
+
         const contactData = {
             fullName: fullName,
-            lastName: clientName,
-            firstName: jobNum + (parsed.allText ? ` - ${parsed.allText}` : ''),
+            lastName: lastName,
+            firstName: nFirstName,
             organization: claimNum ? `Claim: ${claimNum}` : 'North Park Cleaners',
             phone: parsed.cleanNumber,
             email: email,
