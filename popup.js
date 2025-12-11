@@ -410,28 +410,28 @@ document.addEventListener('DOMContentLoaded', () => {
             zip
         } = contactData;
 
-        let vcard = "BEGIN:VCARD\r\n";
-        vcard += "VERSION:3.0\r\n";
-        vcard += "PRODID:-//LEGWORKmedia//Rnotes & Workspace 1.6//EN\r\n";
-        vcard += `UID:rnotes-${Date.now()}-${Math.random().toString(36).substr(2, 9)}\r\n`;
+        let vcard = "BEGIN:VCARD\n";
+        vcard += "VERSION:3.0\n";
+        vcard += "PRODID:-//Sabre//Sabre VObject 4.3.3//EN\n";
+        vcard += `UID:sabre-vobject-${Date.now()}-${Math.random().toString(36).substr(2, 9)}\n`;
 
-        // Name - FN is the formatted display name
-        vcard += `FN:${fullName}\r\n`;
-        vcard += `N:${lastName};${firstName};;;\r\n`;
+        // Name
+        vcard += `FN;CHARSET=utf-8:${fullName}\n`;
+        vcard += `N;CHARSET=utf-8:${lastName};${firstName};;;\n`;
 
         // Organization
         if (organization) {
-            vcard += `ORG:${organization}\r\n`;
+            vcard += `ORG;CHARSET=utf-8:${organization}\n`;
         }
 
         // Phone (cleaned, no +1)
         if (phone) {
-            vcard += `TEL;TYPE=CELL:${phone}\r\n`;
+            vcard += `TEL;TYPE=cell:${phone}\n`;
         }
 
         // Email
         if (email) {
-            vcard += `EMAIL:${email}\r\n`;
+            vcard += `EMAIL:${email}\n`;
         }
 
         // Address
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cty = city || '';
             const st = state || '';
             const zp = zip || '';
-            vcard += `ADR;TYPE=WORK:;;${addr};${cty};${st};${zp};USA\r\n`;
+            vcard += `ADR;TYPE=work;CHARSET=utf-8:;;${addr};${cty};${st};${zp};USA\n`;
         }
 
         vcard += "END:VCARD";
