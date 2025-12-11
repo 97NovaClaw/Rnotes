@@ -487,28 +487,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Build contact name: [Job#] - [Client Name] - [Extra Text]
-        // Use spaces for readability in the contact
+        // This will be the display name on all devices
         let fullName = `${jobNum} - ${clientName}`;
         if (parsed.allText) {
             fullName += ` - ${parsed.allText}`;
         }
 
-        // For vCard N field, we need Last;First format
-        // Split client name properly (format: "LYDEN, Thomas" -> Last: LYDEN, First: Thomas)
-        const nameParts = clientName.split(',').map(p => p.trim());
-        const lastName = nameParts[0] || clientName;
-        const firstName = nameParts[1] || '';
-        
-        // Build a descriptive first name for N field
-        let nFirstName = firstName;
-        if (parsed.allText) {
-            nFirstName = firstName ? `${firstName} (${parsed.allText})` : parsed.allText;
-        }
-
+        // For the N field (Last;First;;;), we need to ensure iPhone/Windows show it correctly
+        // Put the entire formatted name as the "Last Name" and leave First Name empty
+        // This ensures iPhone/Windows displays exactly what we want
         const contactData = {
-            fullName: fullName,
-            lastName: lastName,
-            firstName: nFirstName,
+            fullName: fullName,  // Used for FN field
+            lastName: fullName,   // Put full formatted name here for iPhone/Windows
+            firstName: '',        // Leave empty so it doesn't rearrange
             organization: claimNum ? `Claim: ${claimNum}` : 'North Park Cleaners',
             phone: parsed.cleanNumber,
             email: email,
